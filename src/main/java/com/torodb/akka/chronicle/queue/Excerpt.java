@@ -22,12 +22,12 @@ import jdk.nashorn.internal.ir.annotations.Immutable;
  *
  */
 @Immutable
-public class Event<T> {
+public class Excerpt<T> {
 
   private final long index;
   private final T element;
 
-  public Event(long index, T element) {
+  public Excerpt(long index, T element) {
     this.index = index;
     this.element = element;
   }

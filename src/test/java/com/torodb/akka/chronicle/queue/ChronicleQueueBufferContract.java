@@ -56,7 +56,7 @@ public abstract class ChronicleQueueBufferContract extends AbstractChronicleQueu
     List<Integer> result = Source.range(1, maxElements)
         .map(Element::new)
         .via(buffer)
-        .map(Event::getElement)
+        .map(Excerpt::getElement)
         .map(Element::getValue)
         .runWith(StreamConverters.javaCollector(Collectors::toList), getMaterializer())
         .toCompletableFuture()
@@ -91,7 +91,7 @@ public abstract class ChronicleQueueBufferContract extends AbstractChronicleQueu
     TestSource.<Integer>probe(system)
         .map(Element::new)
         .via(buffer)
-        .map(Event::getElement)
+        .map(Excerpt::getElement)
         .map(Element::getValue)
         .fold(new ArrayList<Integer>(), (ArrayList<Integer> a, Integer i) -> {
           a.add(i);
@@ -131,7 +131,7 @@ public abstract class ChronicleQueueBufferContract extends AbstractChronicleQueu
     return TestSource.<Integer>probe(system)
         .map(Element::new)
         .via(buffer)
-        .map(Event::getElement)
+        .map(Excerpt::getElement)
         .map(Element::getValue)
         .toMat(TestSink.probe(system), Keep.both())
         .run(getMaterializer());
