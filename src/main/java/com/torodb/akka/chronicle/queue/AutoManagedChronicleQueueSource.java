@@ -24,9 +24,7 @@ import scala.concurrent.duration.FiniteDuration;
 import java.util.function.Supplier;
 
 /**
- * A {@link ChronicleQueueSource} that manages the lifecycle of the {@link ChronicleQueue}, so
- * when {@link #createLogic(akka.stream.Attributes) logic associated with this object} is stopped,
- * the queue is closed.
+ * A {@link ChronicleQueueSource} that automatically close the queue when it completes.
  */
 class AutoManagedChronicleQueueSource<T> extends ChronicleQueueSource<T> {
 

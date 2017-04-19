@@ -24,7 +24,7 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import java.util.function.Supplier;
 
 /**
- *
+ * A {@link ChronicleQueueBuffer} that automatically close the queue when it completes.
  */
 class AutoManagedChronicleQueueBuffer<T> extends ChronicleQueueBuffer<T> {
 

@@ -30,17 +30,29 @@ import net.openhft.chronicle.wire.DocumentContext;
 import java.util.Optional;
 
 /**
+ * An Akka offheap buffer that stores messages into {@link ChronicleQueue}.
  *
+ * This buffer doesn't have limit (except the size of the hard drive), so the producer is never
+ * backpreassures. '
+ *
+ * ''Emits''' when the buffer has an element available
+ *
+ * '''Does not Backpressure''' upstream when downstream backpressures, instead buffers the stream
+ * element to memory mapped queue
+ *
+ * '''Completes''' when upstream completes
+ *
+ * '''Cancels''' when downstream cancels
  */
-public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Event<T>>> {
+public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Excerpt<T>>> {
 
   private final ChronicleQueue queue;
   private final WriteMarshaller<T> writer;
   private final ReadMarshaller<T> reader;
   private final Inlet<T> in = Inlet.create(ChronicleQueueBuffer.class.getSimpleName() + ".in");
-  private final Outlet<Event<T>> out = Outlet.create(
+  private final Outlet<Excerpt<T>> out = Outlet.create(
       ChronicleQueueBuffer.class.getSimpleName() + ".out");
-  private final FlowShape<T, Event<T>> shape = FlowShape.of(in, out);
+  private final FlowShape<T, Excerpt<T>> shape = FlowShape.of(in, out);
 
   ChronicleQueueBuffer(ChronicleQueue queue, WriteMarshaller<T> writer, ReadMarshaller<T> reader) {
     this.queue = queue;
@@ -53,7 +65,7 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Event<T>>> 
   }
 
   @Override
-  public FlowShape<T, Event<T>> shape() {
+  public FlowShape<T, Excerpt<T>> shape() {
     return shape;
   }
 
@@ -92,7 +104,7 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Event<T>>> 
     }
 
     private void onPull() {
-      Optional<Event<T>> element = readElement();
+      Optional<Excerpt<T>> element = readElement();
       if (!element.isPresent()) {
         //There are no elements on the queue, we have to wait until a push
         return ;
@@ -100,13 +112,13 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Event<T>>> 
       push(out, element.get());
     }
 
-    private Optional<Event<T>> readElement() {
+    private Optional<Excerpt<T>> readElement() {
       try (DocumentContext dc = tailer.readingDocument()) {
         if (!dc.isPresent()) {
           return Optional.empty();
         }
         return Optional.of(
-            new Event<>(
+            new Excerpt<>(
                 dc.index(),
                 reader.apply(dc.wire())
             )

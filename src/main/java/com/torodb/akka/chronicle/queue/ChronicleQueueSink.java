@@ -31,7 +31,14 @@ import scala.Tuple2;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * An Akka offheap sink that stores messages into a {@link ChronicleQueue}.
  *
+ * Materializes a {@link CompletableFuture CompletableFuture&lt;NotUsed&gt;} which completes when
+ * the stream completes.
+ *
+ * ''Cancels''' never
+ *
+ * '''Backpreassures''' never
  */
 public class ChronicleQueueSink<T> extends 
     GraphStageWithMaterializedValue<SinkShape<T>, CompletableFuture<NotUsed>> {

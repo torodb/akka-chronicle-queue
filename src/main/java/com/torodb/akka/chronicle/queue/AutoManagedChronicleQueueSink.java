@@ -23,9 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 /**
- * A {@link ChronicleQueueSink} that manages the lifecycle of the {@link ChronicleQueue}, so
- * when {@link #createLogic(akka.stream.Attributes) logic associated with this object} is stopped,
- * the queue is closed.
+ * A {@link ChronicleQueueSink} that automatically close the queue when it completes.
  */
 class AutoManagedChronicleQueueSink<T> extends ChronicleQueueSink<T> {
 

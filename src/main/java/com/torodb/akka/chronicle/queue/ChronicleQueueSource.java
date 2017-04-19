@@ -31,7 +31,11 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
+ * An Akka offheap source that retrieve messages from a {@link ChronicleQueue}.
  *
+ * ''Emits''' the buffer has an element available
+ *
+ * '''Completes''' never
  */
 public class ChronicleQueueSource<T> extends GraphStage<SourceShape<T>> {
 
