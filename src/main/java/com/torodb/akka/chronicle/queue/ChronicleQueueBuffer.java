@@ -20,6 +20,7 @@ import akka.stream.Attributes;
 import akka.stream.FlowShape;
 import akka.stream.Inlet;
 import akka.stream.Outlet;
+import akka.stream.stage.AbstractInHandler;
 import akka.stream.stage.GraphStage;
 import akka.stream.stage.GraphStageLogic;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -77,6 +78,8 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Excerpt<T>>
   protected class Logic extends GraphStageLogic {
     private final ExcerptAppender appender;
     private final ExcerptTailer tailer;
+    private boolean upstreamFinished = false;
+    private Throwable upstreamError = null;
 
     public Logic() {
       super(shape());
@@ -84,7 +87,25 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Excerpt<T>>
       appender = queue.acquireAppender();
       tailer = queue.createTailer();
 
-      setHandler(in, this::onPush);
+      setHandler(in, new AbstractInHandler() {
+        @Override
+        public void onPush() throws Exception {
+          Logic.this.onPush();
+        }
+
+        @Override
+        public void onUpstreamFailure(Throwable ex) throws Exception {
+          upstreamError = ex;
+          checkState();
+        }
+
+        @Override
+        public void onUpstreamFinish() throws Exception {
+          upstreamFinished = true;
+          checkState();
+        }
+
+      });
       setHandler(out, this::onPull);
     }
 
@@ -107,9 +128,21 @@ public class ChronicleQueueBuffer<T> extends GraphStage<FlowShape<T, Excerpt<T>>
       Optional<Excerpt<T>> element = readElement();
       if (!element.isPresent()) {
         //There are no elements on the queue, we have to wait until a push
+        checkState();
         return ;
       }
       push(out, element.get());
+    }
+
+    private void checkState() {
+      if (isAvailable(out)) {
+        if (upstreamError != null) {
+          failStage(upstreamError);
+        }
+        if (upstreamFinished) {
+          completeStage();
+        }
+      }
     }
 
     private Optional<Excerpt<T>> readElement() {

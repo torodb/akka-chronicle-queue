@@ -96,7 +96,7 @@ public abstract class ChronicleQueueBufferContract extends AbstractChronicleQueu
         .fold(new ArrayList<Integer>(), (ArrayList<Integer> a, Integer i) -> {
           a.add(i);
           return a;
-            })
+        })
         .toMat(Sink.cancelled(), Keep.left())
         .run(getMaterializer())
         .expectCancellation();
@@ -122,6 +122,40 @@ public abstract class ChronicleQueueBufferContract extends AbstractChronicleQueu
     Assertions.assertEquals("A testing exception", foundError.getMessage(),
         "The expected exception msg is different than expected");
 
+  }
+
+  @Test
+  void onCompleteAllAreRead(ChronicleQueue queue, ActorSystem system) {
+    Pair<TestPublisher.Probe<Integer>, TestSubscriber.Probe<Integer>> probes =
+        createProbes(queue, system);
+    TestPublisher.Probe<Integer> sourceProbe = probes.first();
+    TestSubscriber.Probe<Integer> sinkProbe = probes.second();
+
+    Integer emited = 3;
+
+    sourceProbe.sendNext(emited)
+        .sendComplete();
+
+    sinkProbe.request(10)
+        .expectNext(emited)
+        .expectComplete();
+  }
+
+  @Test
+  void onExceptionAllAreRead(ChronicleQueue queue, ActorSystem system) {
+    Pair<TestPublisher.Probe<Integer>, TestSubscriber.Probe<Integer>> probes =
+        createProbes(queue, system);
+    TestPublisher.Probe<Integer> sourceProbe = probes.first();
+    TestSubscriber.Probe<Integer> sinkProbe = probes.second();
+
+    Integer emited = 3;
+
+    sourceProbe.sendNext(emited)
+        .sendError(new RuntimeException("A testing exception"));
+
+    sinkProbe.request(10)
+        .expectNext(emited)
+        .expectError();
   }
 
   Pair<TestPublisher.Probe<Integer>, TestSubscriber.Probe<Integer>> createProbes(
