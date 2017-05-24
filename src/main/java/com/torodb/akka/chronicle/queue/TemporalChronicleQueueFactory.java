@@ -34,7 +34,7 @@ public class TemporalChronicleQueueFactory {
   private TemporalChronicleQueueFactory() {
   }
 
-  public static ChronicleQueue createTemporalQueue() {
+  public static SingleChronicleQueueBuilder temporalQueueBuilder() {
     Path path;
     try {
       path = Files.createTempDirectory("cq-akka-test");
@@ -43,7 +43,11 @@ public class TemporalChronicleQueueFactory {
       throw new RuntimeException(ex);
     }
 
-    return SingleChronicleQueueBuilder.binary(path).build();
+    return SingleChronicleQueueBuilder.binary(path);
+  }
+
+  public static ChronicleQueue createTemporalQueue() {
+    return temporalQueueBuilder().build();
   }
 
   @SuppressWarnings("checkstyle:EmptyCatchBlock")
