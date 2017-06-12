@@ -16,7 +16,6 @@
 
 package com.torodb.akka.chronicle.queue;
 
-
 import akka.stream.Attributes;
 import akka.stream.stage.GraphStageLogic;
 import net.openhft.chronicle.queue.ChronicleQueue;

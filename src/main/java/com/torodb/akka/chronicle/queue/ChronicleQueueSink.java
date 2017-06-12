@@ -16,7 +16,6 @@
 
 package com.torodb.akka.chronicle.queue;
 
-
 import akka.NotUsed;
 import akka.stream.Attributes;
 import akka.stream.Inlet;
